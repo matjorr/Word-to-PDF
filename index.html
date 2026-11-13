@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Convert Word DOCX documents to PDF in your browser. Simple, private, and easy to use.">
+  <meta name="theme-color" content="#f7f6fb">
+  <title>Word to PDF — Simple document conversion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx-preview/0.3.6/docx-preview.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="Word to PDF home">
+      <span class="brand-mark">W</span><span>word<span class="brand-accent">to</span>pdf</span>
+    </a>
+    <span class="header-note">Simple document tools</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> DOCUMENT CONVERTER</div>
+      <h1>Word to PDF, <span>made simple.</span></h1>
+      <p class="tagline">Turn your Word documents into PDFs in just a few clicks.</p>
+      <p class="developer-credit">Developed by <span>Covenant</span></p>
+    </section>
+
+    <section class="workspace" aria-label="Word to PDF converter">
+      <div class="upload-card" id="dropZone">
+        <div class="upload-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none"><path d="M14 5.5h14l9 9V40a2.5 2.5 0 0 1-2.5 2.5h-21A2.5 2.5 0 0 1 11 40V8a2.5 2.5 0 0 1 3-2.5Z" stroke="currentColor" stroke-width="1.8"/><path d="M28 6v10h9M24 34V22m0 0-5 5m5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>Choose a Word document</h2>
+        <p class="upload-description">Drag and drop your .docx file here, or browse your device.</p>
+        <label class="file-button" for="fileInput">Choose file</label>
+        <input id="fileInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        <p class="file-hint">DOCX files only · Maximum 15 MB</p>
+        <div class="selected-file" id="selectedFile" hidden>
+          <span class="file-badge">DOCX</span>
+          <span class="file-name" id="fileName"></span>
+          <button class="remove-file" id="removeFile" type="button" aria-label="Remove file">×</button>
+        </div>
+        <p class="error-message" id="errorMessage" role="alert"></p>
+      </div>
+
+      <div class="action-row">
+        <div class="privacy-note"><span class="lock-icon">⌑</span> Your document is processed in your browser.</div>
+        <button class="convert-button" id="convertButton" type="button" disabled>
+          Convert to PDF <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <div class="progress-area" id="progressArea" hidden>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <p id="progressText">Preparing your document…</p>
+      </div>
+    </section>
+
+    <section class="how-section">
+      <h2>Three simple steps</h2>
+      <div class="steps">
+        <article class="step"><span class="step-number">01</span><h3>Upload</h3><p>Select your Word document from your device.</p></article>
+        <article class="step"><span class="step-number">02</span><h3>Convert</h3><p>Let the browser prepare your document for PDF.</p></article>
+        <article class="step"><span class="step-number">03</span><h3>Download</h3><p>Save your converted PDF to your device.</p></article>
+      </div>
+    </section>
+
+    <section class="faq">
+      <h2>Frequently asked questions</h2>
+      <details><summary>Which files can I convert?</summary><p>This first version supports Microsoft Word .docx files. Older .doc files are not supported.</p></details>
+      <details><summary>Are my documents uploaded?</summary><p>No. The conversion runs in your browser. The document is not sent to a conversion server by this page. The required conversion libraries are loaded from a third-party CDN.</p></details>
+      <details><summary>Will the PDF look exactly like Word?</summary><p>Document rendering can vary between browsers and fonts. Review the PDF before using it, especially if your document has complex tables, columns, headers, footers, or unusual fonts.</p></details>
+    </section>
+  </main>
+
+  <footer><span>© <span id="year"></span> Word to PDF</span><span>Simple tools for everyday tasks.</span></footer>
+
+  <div class="render-stage" id="renderStage" aria-hidden="true"></div>
+  <script src="app.js"></script>
+</body>
+</html>
