@@ -59,7 +59,7 @@ h1 span{color:var(--accent)}
 .faq summary{cursor:pointer;font-weight:600;font-size:14px}
 .faq details p{font-size:13px;color:var(--muted);max-width:750px;margin:10px 0 0}
 footer{display:flex;justify-content:space-between;gap:16px;padding:22px max(6vw,24px);border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-.render-stage{position:fixed;left:-100000px;top:0;width:794px;background:white;color:#111;z-index:-1}
+.render-stage{position:fixed;left:-100000px;top:0;width:794px;background:white;color:#111;z-index:-1;overflow:visible}
 .render-stage .docx-wrapper{background:white!important;padding:0!important}
 .render-stage section.docx{box-shadow:none!important;margin:0 auto!important}
 @media(max-width:650px){.site-header{height:64px}.header-note{display:none}.hero{padding:55px 0 28px}.workspace{padding:17px;border-radius:17px}.upload-card{padding:24px 15px;min-height:270px}.action-row{align-items:stretch;flex-direction:column}.convert-button{width:100%}.steps{grid-template-columns:1fr}.step{padding:17px}.how-section{padding:48px 0 35px}footer{flex-direction:column;align-items:center;text-align:center}}
