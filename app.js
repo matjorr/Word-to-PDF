@@ -11,18 +11,38 @@ const progressArea = $("#progressArea");
 const progressBar = $("#progressBar");
 const progressText = $("#progressText");
 const renderStage = $("#renderStage");
+const removeFileButton = $("#removeFile");
 
 let currentFile = null;
 let isConverting = false;
 
-$("#year").textContent = new Date().getFullYear();
+if ($("#year")) {
+  $("#year").textContent = new Date().getFullYear();
+}
 
 function showError(message) {
-  errorMessage.textContent = message;
+  if (errorMessage) errorMessage.textContent = message;
 }
 
 function clearError() {
-  errorMessage.textContent = "";
+  if (errorMessage) errorMessage.textContent = "";
+}
+
+function updateFileUI() {
+  const hasFile = Boolean(currentFile);
+
+  if (selectedFile) selectedFile.hidden = !hasFile;
+  if (fileName) fileName.textContent = hasFile ? currentFile.name : "";
+
+  if (convertButton) {
+    convertButton.disabled = !hasFile || isConverting;
+  }
+}
+
+function setProgress(percent, message) {
+  if (progressArea) progressArea.hidden = false;
+  if (progressBar) progressBar.style.width = `${percent}%`;
+  if (progressText) progressText.textContent = message;
 }
 
 function setFile(file) {
@@ -30,10 +50,7 @@ function setFile(file) {
 
   if (!file) return;
 
-  const isDocx =
-    file.name.toLowerCase().endsWith(".docx") ||
-    file.type ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  const isDocx = file.name.toLowerCase().endsWith(".docx");
 
   if (!isDocx) {
     currentFile = null;
@@ -44,7 +61,7 @@ function setFile(file) {
 
   if (file.size > 15 * 1024 * 1024) {
     currentFile = null;
-    showError("Your file is larger than 15 MB. Please choose a smaller document.");
+    showError("Your document exceeds the 15 MB limit.");
     updateFileUI();
     return;
   }
@@ -53,50 +70,119 @@ function setFile(file) {
   updateFileUI();
 }
 
-function updateFileUI() {
-  const hasFile = Boolean(currentFile);
-
-  selectedFile.hidden = !hasFile;
-  fileName.textContent = hasFile ? currentFile.name : "";
-  convertButton.disabled = !hasFile || isConverting;
+if (fileInput) {
+  fileInput.addEventListener("change", () => {
+    setFile(fileInput.files?.[0]);
+  });
 }
 
-fileInput.addEventListener("change", () => {
-  setFile(fileInput.files?.[0]);
-});
-
-["dragenter", "dragover"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (event) => {
-    event.preventDefault();
-    dropZone.classList.add("dragover");
+if (dropZone) {
+  ["dragenter", "dragover"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.add("dragover");
+    });
   });
-});
 
-["dragleave", "drop"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (event) => {
-    event.preventDefault();
-    dropZone.classList.remove("dragover");
+  ["dragleave", "drop"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("dragover");
+    });
   });
-});
 
-dropZone.addEventListener("drop", (event) => {
-  const file = event.dataTransfer?.files?.[0];
-  if (file) setFile(file);
-});
+  dropZone.addEventListener("drop", (event) => {
+    const file = event.dataTransfer?.files?.[0];
+    if (file) setFile(file);
+  });
+}
 
-$("#removeFile").addEventListener("click", () => {
-  if (isConverting) return;
+if (removeFileButton) {
+  removeFileButton.addEventListener("click", () => {
+    if (isConverting) return;
 
-  currentFile = null;
-  fileInput.value = "";
-  clearError();
-  updateFileUI();
-});
+    currentFile = null;
+    if (fileInput) fileInput.value = "";
 
-function updateProgress(percent, message) {
-  progressArea.hidden = false;
-  progressBar.style.width = `${percent}%`;
-  progressText.textContent = message;
+    clearError();
+    updateFileUI();
+  });
+}
+
+// Add print-specific styling.
+// The website interface stays hidden when the print dialog opens.
+
+function installPrintStyles() {
+  let style = document.getElementById("document-print-styles");
+
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "document-print-styles";
+
+    style.textContent = `
+      @media print {
+        @page {
+          margin: 12mm;
+        }
+
+        html, body {
+          background: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+
+        body * {
+          visibility: hidden !important;
+        }
+
+        #renderStage,
+        #renderStage * {
+          visibility: visible !important;
+        }
+
+        #renderStage {
+          display: block !important;
+          position: static !important;
+          left: auto !important;
+          top: auto !important;
+          width: 100% !important;
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          background: #ffffff !important;
+          color: #000000 !important;
+          z-index: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        #renderStage .docx-wrapper {
+          display: block !important;
+          background: #ffffff !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        #renderStage .docx {
+          box-shadow: none !important;
+          margin: 0 auto !important;
+          break-after: page;
+          page-break-after: always;
+        }
+
+        #renderStage .docx:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  return style;
 }
 
 function waitForLayout() {
@@ -111,36 +197,15 @@ async function waitForImages(container) {
   const images = Array.from(container.querySelectorAll("img"));
 
   await Promise.all(
-    images.map((image) => {
-      if (image.complete) return Promise.resolve();
+    images.map((img) => {
+      if (img.complete) return Promise.resolve();
 
       return new Promise((resolve) => {
-        image.onload = resolve;
-        image.onerror = resolve;
+        img.onload = resolve;
+        img.onerror = resolve;
       });
     })
   );
-}
-
-function getLibraries() {
-  const docxLibrary = window.docx;
-  const pdfLibrary = window.html2pdf;
-
-  if (
-    !docxLibrary ||
-    typeof docxLibrary.renderAsync !== "function"
-  ) {
-    throw new Error("The Word document rendering library did not load.");
-  }
-
-  if (typeof pdfLibrary !== "function") {
-    throw new Error("The PDF conversion library did not load.");
-  }
-
-  return {
-    docxLibrary,
-    pdfLibrary
-  };
 }
 
 async function convertDocument() {
@@ -150,37 +215,38 @@ async function convertDocument() {
   isConverting = true;
   updateFileUI();
 
-  const originalStageStyle = renderStage.getAttribute("style");
+  const originalStyle = renderStage.getAttribute("style");
 
   try {
-    const { docxLibrary, pdfLibrary } = getLibraries();
+    if (
+      !window.docx ||
+      typeof window.docx.renderAsync !== "function"
+    ) {
+      throw new Error(
+        "The Word rendering library could not load. Check your internet connection and refresh the page."
+      );
+    }
 
     renderStage.innerHTML = "";
 
-    // Put the document inside the browser viewport.
-    // This avoids the blank PDF issue caused by capturing
-    // content positioned far outside the viewport.
-
+    // Render the document outside the visible website.
     renderStage.style.position = "fixed";
-    renderStage.style.left = "0";
+    renderStage.style.left = "-100000px";
     renderStage.style.top = "0";
     renderStage.style.width = "794px";
-    renderStage.style.minHeight = "100px";
     renderStage.style.height = "auto";
     renderStage.style.overflow = "visible";
     renderStage.style.background = "#ffffff";
-    renderStage.style.color = "#111111";
-    renderStage.style.zIndex = "9999";
-    renderStage.style.padding = "0";
-    renderStage.style.margin = "0";
+    renderStage.style.color = "#000000";
+    renderStage.style.zIndex = "-1";
 
-    updateProgress(10, "Reading your Word document…");
+    setProgress(10, "Reading your Word document…");
 
     const buffer = await currentFile.arrayBuffer();
 
-    updateProgress(30, "Rendering document contents…");
+    setProgress(30, "Rendering Word pages and images…");
 
-    await docxLibrary.renderAsync(
+    await window.docx.renderAsync(
       buffer,
       renderStage,
       null,
@@ -198,79 +264,57 @@ async function convertDocument() {
     await waitForImages(renderStage);
     await waitForLayout();
 
-    // Check that the document actually rendered.
-    const renderedContent = renderStage.innerText.trim();
-    const renderedHeight = renderStage.scrollHeight;
+    const pageElements = renderStage.querySelectorAll(".docx");
+    const textContent = renderStage.innerText.trim();
 
-    if (!renderedContent || renderedHeight < 50) {
+    if (!pageElements.length || !textContent) {
       throw new Error(
-        "The Word document appears empty after rendering."
+        "The Word document could not be rendered. Please try another DOCX file."
       );
     }
 
-    updateProgress(60, "Preparing your PDF pages…");
+    setProgress(75, "Preparing your document for printing…");
 
-    const safeName = currentFile.name.replace(/\.docx$/i, "");
+    installPrintStyles();
 
-    const options = {
-      margin: [10, 10, 10, 10],
-      filename: `${safeName}.pdf`,
-
-      image: {
-        type: "jpeg",
-        quality: 0.98
-      },
-
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 794
-      },
-
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-        compress: true
-      },
-
-      pagebreak: {
-        mode: ["css", "legacy"],
-        avoid: ["tr", "img"]
-      }
-    };
-
-    updateProgress(75, "Generating your PDF…");
+    // Move the rendered document into the printable page.
+    renderStage.style.position = "static";
+    renderStage.style.left = "auto";
+    renderStage.style.top = "auto";
+    renderStage.style.width = "100%";
+    renderStage.style.height = "auto";
+    renderStage.style.minHeight = "0";
+    renderStage.style.overflow = "visible";
+    renderStage.style.background = "#ffffff";
+    renderStage.style.color = "#000000";
+    renderStage.style.zIndex = "auto";
+    renderStage.style.margin = "0";
+    renderStage.style.padding = "0";
 
     await waitForLayout();
 
-    await pdfLibrary()
-      .set(options)
-      .from(renderStage)
-      .save();
+    setProgress(
+      100,
+      "Your document is ready. Choose Save as PDF in the print window."
+    );
 
-    updateProgress(100, "Your PDF has been downloaded!");
+    // Open the browser's native print dialog.
+    window.print();
 
   } catch (error) {
-    console.error("Conversion error:", error);
+    console.error("Word to PDF error:", error);
 
     showError(
       error.message ||
-      "Conversion failed. Please try another DOCX document."
+      "Something went wrong while preparing your document."
     );
 
-    progressText.textContent = "Conversion unsuccessful.";
-
   } finally {
-    // Restore the original hidden rendering stage.
-    if (originalStageStyle === null) {
+    // Restore the original hidden rendering area.
+    if (originalStyle === null) {
       renderStage.removeAttribute("style");
     } else {
-      renderStage.setAttribute("style", originalStageStyle);
+      renderStage.setAttribute("style", originalStyle);
     }
 
     renderStage.innerHTML = "";
@@ -279,10 +323,12 @@ async function convertDocument() {
     updateFileUI();
 
     setTimeout(() => {
-      progressArea.hidden = true;
-      progressBar.style.width = "0%";
+      if (progressArea) progressArea.hidden = true;
+      if (progressBar) progressBar.style.width = "0%";
     }, 5000);
   }
 }
 
-convertButton.addEventListener("click", convertDocument);
+if (convertButton) {
+  convertButton.addEventListener("click", convertDocument);
+}
