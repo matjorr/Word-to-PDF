@@ -63,3 +63,35 @@ footer{display:flex;justify-content:space-between;gap:16px;padding:22px max(6vw,
 .render-stage .docx-wrapper{background:white!important;padding:0!important}
 .render-stage section.docx{box-shadow:none!important;margin:0 auto!important}
 @media(max-width:650px){.site-header{height:64px}.header-note{display:none}.hero{padding:55px 0 28px}.workspace{padding:17px;border-radius:17px}.upload-card{padding:24px 15px;min-height:270px}.action-row{align-items:stretch;flex-direction:column}.convert-button{width:100%}.steps{grid-template-columns:1fr}.step{padding:17px}.how-section{padding:48px 0 35px}footer{flex-direction:column;align-items:center;text-align:center}}
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-meta {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.site-footer .developer-credit {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #9692a3;
+}
+
+.site-footer .developer-credit span {
+  color: #625783;
+  font-weight: 400;
+}
+
+@media (max-width: 650px) {
+  .footer-meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+}
